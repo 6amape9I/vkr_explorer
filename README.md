@@ -202,6 +202,35 @@ python -m vkr_article_dataset.cli build `
 - `distributed_training`
 - `parameter_server`
 
+## UI для проверки датасета
+
+Для ручной проверки собранного датасета теперь есть локальный интерфейс на `Streamlit`.
+
+По умолчанию приложение:
+
+- читает `data/normalized/articles.jsonl`;
+- если существует `data/normalized/articles.reviewed.jsonl`, накладывает из него сохранённые метки;
+- позволяет менять только `gold_label`;
+- сохраняет результат в отдельный `data/normalized/articles.reviewed.jsonl`, не переписывая исходный `articles.jsonl`.
+
+### Запуск на Windows
+
+```powershell
+python -m streamlit run src\vkr_article_dataset\review_app.py -- `
+  --input data\normalized\articles.jsonl `
+  --output data\normalized\articles.reviewed.jsonl
+```
+
+### Что умеет интерфейс
+
+- поиск по заголовку;
+- фильтр по `gold_label`;
+- фильтр по `is_hard_negative`;
+- список статей в формате `gold_label | year | title`;
+- просмотр заголовка, метки, авторов, ссылок и текста статьи;
+- кнопки `Previous` / `Next`;
+- явное сохранение через `Save review`.
+
 ## Тесты
 
 ```powershell
