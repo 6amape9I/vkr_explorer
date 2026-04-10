@@ -1,0 +1,2 @@
+[console_scripts]
+vkr-dataset = vkr_article_dataset.cli:main

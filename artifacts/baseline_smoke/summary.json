@@ -1,0 +1,77 @@
+{
+  "input": "data\\normalized\\articles.jsonl",
+  "workdir": "artifacts\\baseline_smoke",
+  "text_mode": "title_abstract",
+  "random_state": 42,
+  "dataset_records": 285,
+  "dataset_artifacts": {
+    "jsonl": "artifacts\\baseline_smoke\\dataset\\baseline_dataset.jsonl",
+    "csv": "artifacts\\baseline_smoke\\dataset\\baseline_dataset.csv"
+  },
+  "split_artifacts": {
+    "train": "artifacts\\baseline_smoke\\splits\\train.jsonl",
+    "val": "artifacts\\baseline_smoke\\splits\\val.jsonl",
+    "test": "artifacts\\baseline_smoke\\splits\\test.jsonl",
+    "manifest": "artifacts\\baseline_smoke\\splits\\manifest.json"
+  },
+  "models": {
+    "logreg": {
+      "artifact_dir": "artifacts\\baseline_smoke\\logreg",
+      "vectorizer": "artifacts\\baseline_smoke\\logreg\\vectorizer.joblib",
+      "model": "artifacts\\baseline_smoke\\logreg\\model.joblib",
+      "config": "artifacts\\baseline_smoke\\logreg\\config.json",
+      "metrics": {
+        "train": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "records": 199
+        },
+        "val": {
+          "accuracy": 0.9534883720930233,
+          "precision": 0.9090909090909091,
+          "recall": 0.9090909090909091,
+          "f1": 0.9090909090909091,
+          "records": 43
+        },
+        "test": {
+          "accuracy": 0.9534883720930233,
+          "precision": 0.8333333333333334,
+          "recall": 1.0,
+          "f1": 0.9090909090909091,
+          "records": 43
+        }
+      }
+    },
+    "linear_svm": {
+      "artifact_dir": "artifacts\\baseline_smoke\\linear_svm",
+      "vectorizer": "artifacts\\baseline_smoke\\linear_svm\\vectorizer.joblib",
+      "model": "artifacts\\baseline_smoke\\linear_svm\\model.joblib",
+      "config": "artifacts\\baseline_smoke\\linear_svm\\config.json",
+      "metrics": {
+        "train": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "records": 199
+        },
+        "val": {
+          "accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "records": 43
+        },
+        "test": {
+          "accuracy": 0.9534883720930233,
+          "precision": 0.8333333333333334,
+          "recall": 1.0,
+          "f1": 0.9090909090909091,
+          "records": 43
+        }
+      }
+    }
+  }
+}

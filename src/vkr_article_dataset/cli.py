@@ -11,6 +11,7 @@ from .normalization import DatasetBuilder
 from .pdf_pipeline import PdfPipeline
 from .providers import ArxivProvider, OpenAlexProvider
 from .storage import DatasetStorage
+from .train_baseline import run_baseline_pipeline
 
 
 def build_command(args: argparse.Namespace) -> int:
@@ -79,6 +80,17 @@ def enrich_fulltext_command(args: argparse.Namespace) -> int:
     return 0
 
 
+def train_baseline_command(args: argparse.Namespace) -> int:
+    summary = run_baseline_pipeline(
+        input_path=args.input,
+        workdir=args.workdir,
+        text_mode=args.text_mode,
+        random_state=args.random_state,
+    )
+    print(json.dumps(summary, ensure_ascii=False, indent=2))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Normalize article seeds into a local dataset")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -96,6 +108,26 @@ def build_parser() -> argparse.ArgumentParser:
     enrich.add_argument("--input", required=True, type=Path, help="Input normalized JSONL path")
     enrich.add_argument("--output", required=True, type=Path, help="Output JSONL path")
     enrich.set_defaults(func=enrich_fulltext_command)
+
+    baseline = subparsers.add_parser(
+        "train-baseline",
+        help="Train TF-IDF baseline classifiers on the normalized dataset",
+    )
+    baseline.add_argument("--input", required=True, type=Path, help="Input normalized JSONL path")
+    baseline.add_argument("--workdir", required=True, type=Path, help="Directory for baseline artifacts")
+    baseline.add_argument(
+        "--text-mode",
+        default="title_abstract",
+        choices=["title", "abstract", "title_abstract"],
+        help="Text field configuration for the baseline",
+    )
+    baseline.add_argument(
+        "--random-state",
+        default=42,
+        type=int,
+        help="Random seed used for the grouped train/val/test split",
+    )
+    baseline.set_defaults(func=train_baseline_command)
     return parser
 
 
