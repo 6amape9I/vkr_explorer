@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from .config import Settings
+from .discovery import run_discovery_and_label, run_label_candidates
 from .http import HttpClient
 from .io_utils import load_records, load_seeds, write_csv, write_jsonl, write_source_payload_refs
 from .normalization import DatasetBuilder
@@ -91,6 +92,36 @@ def train_baseline_command(args: argparse.Namespace) -> int:
     return 0
 
 
+def discover_and_label_command(args: argparse.Namespace) -> int:
+    settings = Settings.from_env()
+    http_client = HttpClient(settings=settings)
+    summary = run_discovery_and_label(
+        queries_path=args.queries,
+        output_dir=args.output_dir,
+        settings=settings,
+        http_client=http_client,
+        model_path=args.model,
+        vectorizer_path=args.vectorizer,
+        default_source=args.source,
+        max_results_per_query=args.max_results_per_query,
+        relevant_threshold=args.relevant_threshold,
+    )
+    print(json.dumps(summary, ensure_ascii=False, indent=2))
+    return 0
+
+
+def label_candidates_command(args: argparse.Namespace) -> int:
+    summary = run_label_candidates(
+        input_path=args.input,
+        output_dir=args.output_dir,
+        model_path=args.model,
+        vectorizer_path=args.vectorizer,
+        relevant_threshold=args.relevant_threshold,
+    )
+    print(json.dumps(summary, ensure_ascii=False, indent=2))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Normalize article seeds into a local dataset")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -128,6 +159,50 @@ def build_parser() -> argparse.ArgumentParser:
         help="Random seed used for the grouped train/val/test split",
     )
     baseline.set_defaults(func=train_baseline_command)
+
+    discover = subparsers.add_parser(
+        "discover-and-label",
+        help="Search new candidates and score them with the trained baseline model",
+    )
+    discover.add_argument("--queries", required=True, type=Path, help="Input query file (.txt or .jsonl)")
+    discover.add_argument("--model", required=True, type=Path, help="Path to trained LogisticRegression model")
+    discover.add_argument("--vectorizer", required=True, type=Path, help="Path to fitted TF-IDF vectorizer")
+    discover.add_argument("--output-dir", required=True, type=Path, help="Output discovery run directory")
+    discover.add_argument(
+        "--source",
+        default="openalex",
+        choices=["openalex"],
+        help="Discovery source for plain text query files",
+    )
+    discover.add_argument(
+        "--max-results-per-query",
+        default=200,
+        type=int,
+        help="Maximum number of raw search hits to collect per query",
+    )
+    discover.add_argument(
+        "--relevant-threshold",
+        default=0.65,
+        type=float,
+        help="Probability threshold for predicted_relevant",
+    )
+    discover.set_defaults(func=discover_and_label_command)
+
+    label = subparsers.add_parser(
+        "label-candidates",
+        help="Rescore an existing discovery candidates.jsonl file with the trained baseline model",
+    )
+    label.add_argument("--input", required=True, type=Path, help="Input candidates.jsonl path")
+    label.add_argument("--model", required=True, type=Path, help="Path to trained LogisticRegression model")
+    label.add_argument("--vectorizer", required=True, type=Path, help="Path to fitted TF-IDF vectorizer")
+    label.add_argument("--output-dir", required=True, type=Path, help="Output discovery run directory")
+    label.add_argument(
+        "--relevant-threshold",
+        default=0.65,
+        type=float,
+        help="Probability threshold for predicted_relevant",
+    )
+    label.set_defaults(func=label_candidates_command)
     return parser
 
 

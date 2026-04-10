@@ -209,6 +209,7 @@ class RecordMerger:
         ordered_records = sorted(records, key=self._record_merge_score, reverse=True)
         primary = ordered_records[0]
         merged = deepcopy(primary)
+        merged.setdefault("labels", {})
         merged["source_candidates"] = _merge_source_candidates(ordered_records)
         merged["sources"] = {
             "primary_source": primary.get("sources", {}).get("primary_source") or primary.get("identifiers", {}).get("source"),

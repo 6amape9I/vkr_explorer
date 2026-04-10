@@ -64,65 +64,78 @@ class DatasetBuilder:
         return resolution
 
     def _deduplicate(self, records: list[dict]) -> list[dict]:
-        if not records:
-            return []
+        return deduplicate_records(records, merger=self.merger)
 
-        groups: list[list[dict]] = []
-        consumed: set[int] = set()
 
-        exact_indices = self._build_exact_duplicate_index(records)
-        for index, record in enumerate(records):
-            if index in consumed:
+def deduplicate_records(records: list[dict], *, merger: RecordMerger | None = None) -> list[dict]:
+    merger = merger or RecordMerger()
+    groups = group_duplicate_record_indices(records)
+    return [merger.merge_records([records[index] for index in group]) for group in groups]
+
+
+def group_duplicate_record_indices(records: list[dict]) -> list[list[int]]:
+    if not records:
+        return []
+
+    groups: list[list[int]] = []
+    consumed: set[int] = set()
+
+    exact_indices = _build_exact_duplicate_index(records)
+    for index, _record in enumerate(records):
+        if index in consumed:
+            continue
+        pending = [index]
+        group_indices = set()
+        while pending:
+            current_index = pending.pop()
+            if current_index in group_indices:
                 continue
-            pending = [index]
-            group_indices = set()
-            while pending:
-                current_index = pending.pop()
-                if current_index in group_indices:
-                    continue
-                group_indices.add(current_index)
-                for key in _exact_keys(records[current_index]):
-                    for related_index in exact_indices.get(key, set()):
-                        if related_index not in group_indices:
-                            pending.append(related_index)
-            for group_index in group_indices:
-                consumed.add(group_index)
-            groups.append([records[group_index] for group_index in sorted(group_indices)])
+            group_indices.add(current_index)
+            for key in _exact_keys(records[current_index]):
+                for related_index in exact_indices.get(key, set()):
+                    if related_index not in group_indices:
+                        pending.append(related_index)
+        for group_index in group_indices:
+            consumed.add(group_index)
+        groups.append(sorted(group_indices))
 
-        remaining = [group[0] for group in groups if len(group) == 1]
-        fuzzy_groups = self._build_fuzzy_groups(remaining)
-        merged_groups: list[list[dict]] = [group for group in groups if len(group) > 1]
-        merged_groups.extend(fuzzy_groups)
+    remaining_indices = [group[0] for group in groups if len(group) == 1]
+    fuzzy_groups = _build_fuzzy_groups(records, remaining_indices)
+    merged_groups: list[list[int]] = [group for group in groups if len(group) > 1]
+    merged_groups.extend(fuzzy_groups)
 
-        fuzzy_consumed = {
-            record.get("record_id")
-            for group in fuzzy_groups
-            for record in group
-        }
-        for record in remaining:
-            if record.get("record_id") in fuzzy_consumed:
-                continue
-            merged_groups.append([record])
+    fuzzy_consumed = {
+        record_index
+        for group in fuzzy_groups
+        for record_index in group
+    }
+    for record_index in remaining_indices:
+        if record_index in fuzzy_consumed:
+            continue
+        merged_groups.append([record_index])
 
-        return [self.merger.merge_records(group) for group in merged_groups]
+    return merged_groups
 
-    def _build_exact_duplicate_index(self, records: list[dict]) -> dict[tuple[str, str], set[int]]:
-        index: dict[tuple[str, str], set[int]] = {}
-        for record_index, record in enumerate(records):
-            for key in _exact_keys(record):
-                index.setdefault(key, set()).add(record_index)
-        return index
 
-    def _build_fuzzy_groups(self, records: list[dict]) -> list[list[dict]]:
-        buckets: dict[tuple[str, int, str], list[dict]] = {}
-        for record in records:
-            key = _fuzzy_key(record)
-            if key is None:
-                continue
-            if _has_strong_exact_identifier(record):
-                continue
-            buckets.setdefault(key, []).append(record)
-        return [bucket for bucket in buckets.values() if len(bucket) > 1]
+def _build_exact_duplicate_index(records: list[dict]) -> dict[tuple[str, str], set[int]]:
+    index: dict[tuple[str, str], set[int]] = {}
+    for record_index, record in enumerate(records):
+        for key in _exact_keys(record):
+            index.setdefault(key, set()).add(record_index)
+    return index
+
+
+def _build_fuzzy_groups(records: list[dict], record_indices: list[int]) -> list[list[int]]:
+    buckets: dict[tuple[str, int, str], list[int]] = {}
+    for record_index in record_indices:
+        record = records[record_index]
+        key = _fuzzy_key(record)
+        if key is None:
+            continue
+        if _has_strong_exact_identifier(record):
+            continue
+        buckets.setdefault(key, []).append(record_index)
+    return [bucket for bucket in buckets.values() if len(bucket) > 1]
 
 
 def _resolver_name(resolver: object) -> str:

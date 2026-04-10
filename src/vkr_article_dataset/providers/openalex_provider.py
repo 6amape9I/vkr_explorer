@@ -158,6 +158,40 @@ class OpenAlexProvider:
         confidence: float,
         match_details: dict[str, Any] | None = None,
     ) -> ProviderResult:
+        return openalex_work_to_result(
+            work=work,
+            confidence=confidence,
+            match_details=match_details,
+        )
+
+    def result_from_work(
+        self,
+        *,
+        work: dict[str, Any],
+        confidence: float,
+        match_details: dict[str, Any] | None = None,
+    ) -> ProviderResult:
+        return openalex_work_to_result(
+            work=work,
+            confidence=confidence,
+            match_details=match_details,
+        )
+
+    def _base_params(self) -> dict[str, Any]:
+        params: dict[str, Any] = {}
+        if self.settings.contact_email:
+            params["mailto"] = self.settings.contact_email
+        if self.settings.openalex_api_key:
+            params["api_key"] = self.settings.openalex_api_key
+        return params
+
+
+def openalex_work_to_result(
+    *,
+    work: dict[str, Any],
+    confidence: float,
+    match_details: dict[str, Any] | None = None,
+) -> ProviderResult:
         title = normalize_whitespace(work.get("display_name"))
         abstract = _openalex_abstract_to_text(work.get("abstract_inverted_index"))
         source = (work.get("primary_location") or {}).get("source") or {}
@@ -190,14 +224,6 @@ class OpenAlexProvider:
             raw=work,
             match_details=match_details or {},
         )
-
-    def _base_params(self) -> dict[str, Any]:
-        params: dict[str, Any] = {}
-        if self.settings.contact_email:
-            params["mailto"] = self.settings.contact_email
-        if self.settings.openalex_api_key:
-            params["api_key"] = self.settings.openalex_api_key
-        return params
 
 
 def _seed_publication_year(seed: ArticleSeed) -> int | None:

@@ -1,0 +1,2 @@
+record_id,canonical_id,title,publication_year,venue,query,matched_queries,search_source,search_rank,landing_page_url,pdf_url
+art_smoke001,doi:10.1000/smoke-1,Blockchain Federated Learning with Smart Contracts,2024,Smoke Venue,blockchain federated learning,blockchain federated learning,openalex,1,https://example.com/smoke,https://example.com/smoke.pdf

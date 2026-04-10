@@ -1,0 +1,23 @@
+{
+  "run_id": "discovery_smoke_run_2",
+  "mode": "label_candidates",
+  "started_at": "2026-04-10T14:29:59Z",
+  "finished_at": "2026-04-10T14:29:59Z",
+  "queries_count": 1,
+  "source": "openalex",
+  "max_results_per_query": null,
+  "raw_candidates": 1,
+  "deduplicated_candidates": 1,
+  "duplicates_removed": 0,
+  "predicted_relevant": 0,
+  "predicted_irrelevant": 1,
+  "missing_abstracts": 0,
+  "api_errors": 0,
+  "parse_failures": 0,
+  "threshold": 0.65,
+  "model_name": "logreg",
+  "model_version": "baseline_smoke",
+  "model_path": "artifacts\\baseline_smoke\\logreg\\model.joblib",
+  "vectorizer_path": "artifacts\\baseline_smoke\\logreg\\vectorizer.joblib",
+  "input_candidates_path": "artifacts\\discovery_smoke_candidates.jsonl"
+}

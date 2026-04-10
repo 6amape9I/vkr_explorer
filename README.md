@@ -288,6 +288,51 @@ python -m vkr_article_dataset.cli train-baseline `
 
 Команда строит фиксированный grouped split `70/15/15` с `random_state=42`, обучает `TF-IDF + Logistic Regression` и `TF-IDF + Linear SVM` на одном и том же split и сохраняет prediction tables для ручного разбора ошибок.
 
+## Discovery-поиск и авторазметка
+
+Discovery pipeline работает в отдельной папке run и не переписывает ни `data/normalized/articles.jsonl`, ни `data/normalized/articles.reviewed.jsonl`. В первой версии используются:
+
+- источник: `OpenAlex`
+- модель: `Logistic Regression`
+- текст: `title + abstract`
+- threshold по умолчанию: `0.65`
+
+### Поиск и разметка на Windows
+
+```powershell
+python -m vkr_article_dataset.cli discover-and-label `
+  --queries data\discovery\queries.txt `
+  --model artifacts\baseline_run_01\logreg\model.joblib `
+  --vectorizer artifacts\baseline_run_01\logreg\vectorizer.joblib `
+  --output-dir data\discovery_runs\run_001 `
+  --source openalex `
+  --max-results-per-query 200 `
+  --relevant-threshold 0.65
+```
+
+### Повторная разметка готовых кандидатов
+
+```powershell
+python -m vkr_article_dataset.cli label-candidates `
+  --input data\discovery_runs\run_001\candidates.jsonl `
+  --model artifacts\baseline_run_01\logreg\model.joblib `
+  --vectorizer artifacts\baseline_run_01\logreg\vectorizer.joblib `
+  --output-dir data\discovery_runs\run_001_relabel `
+  --relevant-threshold 0.65
+```
+
+В каждом run создаются:
+
+- `manifest.json`
+- `queries.jsonl`
+- `raw_search\`
+- `candidates.jsonl` и `candidates.csv`
+- `predictions.jsonl` и `predictions.csv`
+- `relevant_predictions.jsonl` и `relevant_predictions.csv`
+- `logs\discovery.log`
+
+`predictions.jsonl` хранит полный ledger всех оценённых кандидатов, а `relevant_predictions.*` содержит только записи с `score >= threshold`.
+
 ## Тесты
 
 ```powershell

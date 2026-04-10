@@ -1,0 +1,3 @@
+2026-04-10T14:29:59Z | query="blockchain federated learning" | source=openalex | rank=1 | title="Blockchain Federated Learning with Smart Contracts" | id=doi:10.1000/smoke-1 | pred=predicted_irrelevant | score=0.5930 | threshold=0.65
+prediction_query_summary | query="blockchain federated learning" | deduplicated_candidates=1 | predicted_relevant=0 | predicted_irrelevant=1 | missing_abstracts=0
+run_summary | run_id=discovery_smoke_run_2 | input_candidates=1 | predicted_relevant=0 | predicted_irrelevant=1 | missing_abstracts=0
