@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 import requests
@@ -12,6 +12,8 @@ from .config import Settings
 @dataclass(slots=True)
 class HttpClient:
     settings: Settings
+    session: requests.Session = field(init=False)
+    _last_arxiv_request_at: float = field(init=False, default=0.0)
 
     def __post_init__(self) -> None:
         self.session = requests.Session()

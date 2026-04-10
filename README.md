@@ -1,87 +1,95 @@
 # VKR Article Dataset Builder
 
-Небольшой проект на Python для нормализации списка научных статей в локальный датасет под тему ВКР:
+Небольшой Python-проект для нормализации списка научных статей в локальный датасет для отбора литературы по теме ВКР:
 
-**Федеративное обучение + распределённое обучение + blockchain/on-chain учёт + off-chain вычисления**.
+**federated learning + distributed learning + blockchain/on-chain учёт + off-chain вычисления**.
 
 ## Что делает проект
 
-1. Читает список входных статей (`jsonl` или `csv`).
-2. Пытается получить метаданные по `arXiv ID`, `DOI`, `title` или `URL`.
-3. Преобразует результат в единый локальный формат.
+1. Читает входной список статей из `jsonl` или `csv`.
+2. Пытается обогатить записи через `arXiv` и `OpenAlex`.
+3. Нормализует результат в единый JSON-формат.
 4. Сохраняет:
-   - `JSONL` — основной датасет
-   - `CSV` — удобный плоский экспорт для ручной разметки и фильтрации
-5. Проставляет первичные тематические метки по ключевым словам.
+   - `JSONL` как основной датасет;
+   - `CSV` как плоский экспорт для ручной проверки и фильтрации.
+5. Ставит первичные тематические теги по заголовку и abstract.
 
-## Почему формат именно такой
+## Требования
 
-Для ВКР почти всегда быстро выясняется, что одной только таблицы мало. Нужны одновременно:
+- Windows 10/11
+- Python 3.10+
+- Доступ в интернет для запросов к `arXiv` и `OpenAlex`
 
-- поля для библиографии;
-- поля для текста;
-- поля для ручной разметки;
-- поля для происхождения записи;
-- метки для последующей сборки обучающих данных.
+## Установка на Windows
 
-Поэтому запись хранится как **нормализованный JSON-объект** с блоками:
+Ниже приведён рабочий сценарий для PowerShell.
 
-- `identifiers`
-- `bibliography`
-- `content`
-- `labels`
-- `quality`
-- `provenance`
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python -m pip install -e .
+```
 
-## Структура проекта
+Если PowerShell блокирует активацию окружения, можно либо временно разрешить скрипты:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\.venv\Scripts\Activate.ps1
+```
+
+либо вообще не активировать окружение и вызывать интерпретатор напрямую:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pip install -e .
+```
+
+## Почему нужен `pip install -e .`
+
+Проект использует `src`-layout:
 
 ```text
-vkr_article_dataset_project/
-├── README.md
-├── pyproject.toml
-├── requirements.txt
-├── .env.example
-├── docs/
-│   ├── schema.md
-│   └── example_record.json
-├── data/
-│   ├── input/
-│   │   └── test_articles.jsonl
-│   └── normalized/
-│       └── .gitkeep
-├── src/
-│   └── vkr_article_dataset/
-│       ├── __init__.py
-│       ├── cli.py
-│       ├── config.py
-│       ├── http.py
-│       ├── io_utils.py
-│       ├── models.py
-│       ├── normalization.py
-│       ├── tagger.py
-│       ├── utils.py
-│       └── providers/
-│           ├── __init__.py
-│           ├── arxiv_provider.py
-│           └── openalex_provider.py
-└── tests/
-    ├── test_normalization.py
-    └── test_tagger.py
+src/vkr_article_dataset/...
 ```
 
-## Установка
+Поэтому команда:
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+```powershell
+python -m vkr_article_dataset.cli
 ```
+
+не будет работать из корня репозитория, пока пакет не установлен в окружение через:
+
+```powershell
+python -m pip install -e .
+```
+
+После этого доступны оба варианта запуска:
+
+- `vkr-dataset ...`
+- `python -m vkr_article_dataset.cli ...`
+
+## Переменные окружения
+
+Опционально можно задать:
+
+```powershell
+$env:CONTACT_EMAIL = "you@example.com"
+$env:OPENALEX_API_KEY = ""
+$env:ARXIV_DELAY_SECONDS = "3.0"
+$env:HTTP_TIMEOUT_SECONDS = "30.0"
+```
+
+`CONTACT_EMAIL` полезно передавать в OpenAlex как контактный адрес. Если `OPENALEX_API_KEY` не задан, используется публичный доступ.
 
 ## Формат входного файла
 
 Поддерживаются `jsonl` и `csv`.
 
-Минимально желательно давать хотя бы одно из:
+У каждой записи должно быть хотя бы одно из полей:
 
 - `arxiv_id`
 - `doi`
@@ -95,32 +103,75 @@ pip install -r requirements.txt
 - `is_hard_negative`
 - `notes`
 
-### Пример JSONL
+### Пример `jsonl`
 
 ```json
-{"arxiv_id": "2206.11641", "gold_label": "relevant", "seed_query": "blockchain federated learning off-chain", "notes": "Ключевая статья про verifiable off-chain computation"}
+{"arxiv_id": "2206.11641", "gold_label": "relevant", "seed_query": "blockchain federated learning off-chain computation", "notes": "Ключевая статья по verifiable off-chain computations"}
 {"title": "A Survey on Decentralized Federated Learning", "gold_label": "relevant"}
 {"title": "Parameter Box: High Performance Parameter Servers for Efficient Distributed Deep Neural Network Training", "gold_label": "irrelevant", "is_hard_negative": true}
 ```
 
-## Запуск
+Готовый пример лежит в `data/input/test_articles.jsonl`.
 
-```bash
-export CONTACT_EMAIL="you@example.com"
-export OPENALEX_API_KEY=""
+## Запуск CLI на Windows
 
-python -m vkr_article_dataset.cli build \
-  --input data/input/test_articles.jsonl \
-  --output data/normalized/articles.jsonl \
-  --csv data/normalized/articles.csv
+### Вариант 1: через console script
+
+```powershell
+vkr-dataset build `
+  --input data\input\test_articles.jsonl `
+  --output data\normalized\articles.jsonl `
+  --csv data\normalized\articles.csv
 ```
 
-## Что будет в выходе
+### Вариант 2: через модуль Python
+
+```powershell
+python -m vkr_article_dataset.cli build `
+  --input data\input\test_articles.jsonl `
+  --output data\normalized\articles.jsonl `
+  --csv data\normalized\articles.csv
+```
+
+### Вариант без активации `.venv`
+
+```powershell
+.\.venv\Scripts\vkr-dataset.exe build `
+  --input data\input\test_articles.jsonl `
+  --output data\normalized\articles.jsonl `
+  --csv data\normalized\articles.csv
+```
+
+После выполнения команда печатает краткую сводку в JSON, например:
+
+```json
+{
+  "input": "data\\input\\test_articles.jsonl",
+  "output": "data\\normalized\\articles.jsonl",
+  "records": 5,
+  "csv": "data\\normalized\\articles.csv"
+}
+```
+
+## Что лежит в выходе
 
 ### `articles.jsonl`
-Основной формат для пайплайна.
+
+Основной формат для пайплайна. Каждая строка содержит нормализованную запись со следующими блоками:
+
+- `identifiers`
+- `bibliography`
+- `content`
+- `labels`
+- `quality`
+- `links`
+- `provenance`
+- `raw`
+
+Пример структуры есть в [docs/schema.md](docs/schema.md) и [docs/example_record.json](docs/example_record.json).
 
 ### `articles.csv`
+
 Плоский экспорт для:
 
 - ручной проверки;
@@ -128,7 +179,7 @@ python -m vkr_article_dataset.cli build \
 - быстрой разметки;
 - последующей сборки train/dev/test.
 
-## Предлагаемые метки
+## Теги
 
 ### Основная метка релевантности
 
@@ -151,35 +202,15 @@ python -m vkr_article_dataset.cli build \
 - `distributed_training`
 - `parameter_server`
 
-### Зачем нужен `partial`
+## Тесты
 
-Это полезная категория. Для ВКР по смешанной теме она спасает корпус от грубых решений:
-
-- чистое FL без blockchain — часто `partial`
-- чистый blockchain для ML без FL — часто `partial`
-- классическое распределённое обучение без FL — обычно `irrelevant`
-
-## Что потом делать с этим датасетом
-
-Следующий этап после нормализации:
-
-1. Ручная чистка 100–300 записей.
-2. Формирование train/dev/test.
-3. Отдельная сборка `hard negatives`.
-4. Обучение базового классификатора по `title + abstract`.
-5. Active learning / iterative labeling.
+```powershell
+python -m pytest -q
+```
 
 ## Ограничения текущей версии
 
-- Полный текст PDF не парсится.
-- Сейчас сделан упор на **metadata + abstract**.
-- Основные провайдеры: `arXiv` и `OpenAlex`.
-- Для arXiv в коде есть пауза между запросами, чтобы не долбить API слишком агрессивно.
-
-## Идеи для следующей версии
-
-- поддержка Semantic Scholar;
-- дедупликация по эмбеддингам заголовков;
-- извлечение цитирований и references;
-- полуавтоматическая разметка по правилам;
-- экспорт в HuggingFace Dataset.
+- Полные тексты PDF не парсятся.
+- Основной упор сделан на `metadata + abstract`.
+- Сейчас используются два источника: `arXiv` и `OpenAlex`.
+- Для `arXiv` в клиенте есть задержка между запросами.
