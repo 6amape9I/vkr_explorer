@@ -22,9 +22,10 @@
     {
       "provider_name": "openalex",
       "source_id": "https://openalex.org/W1234567890",
-      "confidence": 0.99,
+      "confidence": 0.95,
       "match_details": {
-        "matched_by": "doi"
+        "matched_by": "doi",
+        "strategy": "exact_doi"
       },
       "identifiers": {
         "doi": "10.1000/example",
@@ -50,8 +51,40 @@
       "has_pdf_url": true
     }
   ],
+  "merge_decisions": {
+    "bibliography.title": {
+      "winner": "openalex",
+      "candidates": [
+        "openalex",
+        "arxiv"
+      ],
+      "reason": "structured metadata + exact title match"
+    },
+    "content.abstract": {
+      "winner": "arxiv",
+      "candidates": [
+        "arxiv",
+        "openalex"
+      ],
+      "reason": "longer abstract"
+    },
+    "links.pdf_url": {
+      "winner": "arxiv",
+      "candidates": [
+        "arxiv"
+      ],
+      "reason": "direct arXiv PDF"
+    },
+    "quality.citation_count": {
+      "winner": "openalex",
+      "candidates": [
+        "openalex"
+      ],
+      "reason": "structured citation metadata"
+    }
+  },
   "bibliography": {
-    "title": "Advancing Blockchain-based Federated Learning through Verifiable Off-chain Computations",
+    "title": "Advancing Blockchain-Based Federated Learning Through Verifiable Off-Chain Computations",
     "authors": [
       "Jonathan Heiss",
       "Elias Grunewald"
@@ -63,7 +96,7 @@
   },
   "content": {
     "abstract": "Federated learning may be subject to both global aggregation attacks and distributed poisoning attacks...",
-    "combined_text": "Advancing Blockchain-based Federated Learning through Verifiable Off-chain Computations\n\nFederated learning may be subject to both global aggregation attacks and distributed poisoning attacks...",
+    "combined_text": "Advancing Blockchain-Based Federated Learning Through Verifiable Off-Chain Computations\n\nFederated learning may be subject to both global aggregation attacks and distributed poisoning attacks...",
     "language": "en",
     "fulltext_ref": "fulltext/art_6abf9d33f0f8.json.gz",
     "fulltext_status": "parsed",
@@ -80,16 +113,61 @@
     "gold_label": "relevant",
     "is_hard_negative": false,
     "auto_topic_tags": [
-      "federated_learning",
       "blockchain",
+      "federated_learning",
       "off_chain",
-      "on_chain",
-      "zk_proof",
-      "security_privacy"
+      "security_privacy",
+      "zk_proof"
     ],
     "auto_method_tags": [
       "verification"
     ],
+    "auto_topic_tag_scores": {
+      "blockchain": 5,
+      "federated_learning": 8,
+      "off_chain": 5,
+      "security_privacy": 4,
+      "zk_proof": 5
+    },
+    "auto_method_tag_scores": {
+      "verification": 5
+    },
+    "auto_topic_tag_evidence": {
+      "blockchain": [
+        {
+          "field": "title",
+          "match": "blockchain",
+          "count": 1,
+          "weight": 3,
+          "score": 3
+        },
+        {
+          "field": "fulltext",
+          "match": "smart contract",
+          "count": 1,
+          "weight": 1,
+          "score": 1
+        },
+        {
+          "field": "context",
+          "match": "bc_fl_context",
+          "count": 1,
+          "weight": 2,
+          "score": 2
+        }
+      ]
+    },
+    "auto_method_tag_evidence": {
+      "verification": [
+        {
+          "field": "title",
+          "match": "verifiable",
+          "count": 1,
+          "weight": 3,
+          "score": 3
+        }
+      ]
+    },
     "manual_topic_tags": [],
     "manual_method_tags": [],
     "notes": "Ключевая статья по связке FL + blockchain + verifiable off-chain compute"
@@ -116,7 +194,21 @@
         "arxiv",
         "openalex"
       ],
-      "errors": {}
+      "errors": {},
+      "rejections": {}
+    },
+    "merge_summary": {
+      "title_winner": "openalex",
+      "abstract_winner": "arxiv",
+      "authors_winner": "openalex",
+      "venue_winner": "openalex",
+      "pdf_url_winner": "arxiv",
+      "citation_count_winner": "openalex"
+    },
+    "dedup_merge": {
+      "merged_record_ids": [
+        "art_6abf9d33f0f8"
+      ]
     }
   },
   "raw": {
@@ -125,5 +217,12 @@
       "arxiv": "raw/arxiv/art_6abf9d33f0f8.json",
       "openalex": "raw/openalex/art_6abf9d33f0f8.json"
     }
+  },
+  "dedup": {
+    "duplicate_group_size": 1,
+    "dedup_strategy": "none",
+    "merged_record_ids": [
+      "art_6abf9d33f0f8"
+    ]
   }
 }

@@ -1,16 +1,17 @@
-# Локальная схема записи статьи: schema v2
+# Локальная схема записи статьи: schema v2 после этапов 3-5
 
-После этапов 1 и 2 основная запись в `data/normalized/articles.jsonl` хранит только нормализованный summary-слой. Полный текст PDF не инлайнится в основной dataset и хранится отдельно.
+Основной `data/normalized/articles.jsonl` хранит нормализованный summary-слой. Полный текст PDF остаётся во внешнем storage и подключается через `content.fulltext_ref`.
 
 ## Корневые поля
 
-- `schema_version` — текущая версия схемы, сейчас `"2"`
-- `record_id` — стабильный локальный идентификатор записи
-- `resolution_status` — `resolved | partial | failed`
-- `retrieved_at` — время сборки записи в UTC ISO
+- `schema_version`: текущая версия схемы, сейчас `"2"`
+- `record_id`: стабильный локальный идентификатор записи
+- `resolution_status`: `resolved | partial | failed`
+- `retrieved_at`: UTC ISO timestamp сборки
 - `identifiers`
 - `sources`
 - `source_candidates`
+- `merge_decisions`
 - `bibliography`
 - `content`
 - `labels`
@@ -18,6 +19,7 @@
 - `links`
 - `provenance`
 - `raw`
+- `dedup`
 
 ## 1. identifiers
 
@@ -31,7 +33,8 @@
 }
 ```
 
-`source` сохранён как backward-compatible alias. Основным источником теперь считается `sources.primary_source`.
+- `canonical_id` строится по приоритету `doi -> arxiv_id -> openalex_id -> hash(title + first_author + year)`.
+- `source` оставлен как backward-compatible alias; основным полем считается `sources.primary_source`.
 
 ## 2. sources
 
@@ -43,6 +46,8 @@
 }
 ```
 
+- `primary_source` выбирается по качеству данных, а не по порядку резолверов.
+
 ## 3. source_candidates
 
 ```json
@@ -50,9 +55,11 @@
   {
     "provider_name": "openalex",
     "source_id": "https://openalex.org/W123",
-    "confidence": 0.99,
+    "confidence": 0.95,
     "match_details": {
-      "matched_by": "doi"
+      "matched_by": "title_rerank",
+      "strategy": "topn_rerank",
+      "accepted_confidence": 0.91
     },
     "identifiers": {
       "doi": "10.1000/example",
@@ -65,22 +72,48 @@
 ]
 ```
 
-Эта секция показывает все успешные resolver candidates, а не только выбранный итоговый источник.
+- Здесь хранится список всех успешных resolver candidates.
+- `match_details` может содержать scorer/confidence trace и top-candidate summary.
 
-## 4. bibliography
+## 4. merge_decisions
 
 ```json
 {
-  "title": "Advancing Blockchain-based Federated Learning through Verifiable Off-chain Computations",
+  "bibliography.title": {
+    "winner": "openalex",
+    "candidates": ["openalex", "arxiv"],
+    "reason": "structured metadata + exact title match"
+  },
+  "content.abstract": {
+    "winner": "arxiv",
+    "candidates": ["arxiv", "openalex"],
+    "reason": "longer abstract"
+  },
+  "links.pdf_url": {
+    "winner": "arxiv",
+    "candidates": ["arxiv"],
+    "reason": "direct arXiv PDF"
+  }
+}
+```
+
+- Это основной explainability-layer для merge.
+- `provenance.merge_summary` хранит компактный winner-summary, а `merge_decisions` даёт trace по полям.
+
+## 5. bibliography
+
+```json
+{
+  "title": "Advancing Blockchain-Based Federated Learning Through Verifiable Off-Chain Computations",
   "authors": ["Author A", "Author B"],
   "publication_year": 2022,
   "publication_date": "2022-06-23",
-  "venue": "arXiv",
+  "venue": "OpenAlex Venue",
   "document_type": "article"
 }
 ```
 
-## 5. content
+## 6. content
 
 ```json
 {
@@ -100,33 +133,48 @@
 }
 ```
 
-Важные правила:
+Правила:
 
-- `combined_text` остаётся компактным и не должен превращаться в полный PDF.
-- `fulltext_ref` указывает на отдельный fulltext-файл.
-- Допустимые статусы:
-  - `not_attempted`
-  - `downloaded`
-  - `parsed`
-  - `failed`
+- `combined_text` остаётся компактным и не превращается в полный PDF body.
+- Допустимые статусы: `not_attempted`, `downloaded`, `parsed`, `failed`.
+- При fulltext enrichment основной JSONL обновляет только `fulltext_ref`, `fulltext_status`, `fulltext_quality`, `fulltext_error` и auto-tag summary.
 
-## 6. labels
+## 7. labels
 
 ```json
 {
   "gold_label": "relevant",
   "is_hard_negative": false,
-  "auto_topic_tags": ["federated_learning", "blockchain", "off_chain", "zk_proof"],
+  "auto_topic_tags": ["federated_learning", "blockchain", "off_chain"],
   "auto_method_tags": ["verification"],
+  "auto_topic_tag_scores": {
+    "blockchain": 5,
+    "federated_learning": 8
+  },
+  "auto_method_tag_scores": {
+    "verification": 5
+  },
+  "auto_topic_tag_evidence": {
+    "blockchain": [
+      {"field": "title", "match": "blockchain", "count": 1, "weight": 3, "score": 3}
+    ]
+  },
+  "auto_method_tag_evidence": {
+    "verification": [
+      {"field": "abstract", "match": "verifiable", "count": 1, "weight": 2, "score": 2}
+    ]
+  },
   "manual_topic_tags": [],
   "manual_method_tags": [],
-  "notes": "manually reviewed"
+  "notes": "manual review note"
 }
 ```
 
-Автотеги и ручные теги хранятся раздельно.
+- Auto и manual tags всегда хранятся раздельно.
+- Auto-tagging строится по score/evidence.
+- Fulltext-aware tagging использует только excerpt без references section.
 
-## 7. quality
+## 8. quality
 
 ```json
 {
@@ -137,16 +185,18 @@
 }
 ```
 
-## 8. links
+- `has_pdf_url` вычисляется из merged `links.pdf_url`, а не берётся из одного payload.
+
+## 9. links
 
 ```json
 {
-  "landing_page_url": "https://arxiv.org/abs/2206.11641",
+  "landing_page_url": "https://doi.org/10.1000/example",
   "pdf_url": "https://arxiv.org/pdf/2206.11641.pdf"
 }
 ```
 
-## 9. provenance
+## 10. provenance
 
 ```json
 {
@@ -155,12 +205,21 @@
   "resolver_summary": {
     "attempted": ["arxiv", "openalex"],
     "successful": ["arxiv", "openalex"],
-    "errors": {}
+    "errors": {},
+    "rejections": {}
+  },
+  "merge_summary": {
+    "title_winner": "openalex",
+    "abstract_winner": "arxiv",
+    "pdf_url_winner": "arxiv",
+    "citation_count_winner": "openalex"
   }
 }
 ```
 
-## 10. raw
+- `rejections` используется для explainable no-match сценариев, например low-confidence title match в OpenAlex.
+
+## 11. raw
 
 ```json
 {
@@ -172,13 +231,26 @@
 }
 ```
 
-Сырые provider payloads вынесены из основной записи в отдельные файлы под `data/raw/`.
+- Raw provider payloads вынесены из основной записи в отдельные файлы.
+- После dedup возможны значения-списки, если в duplicate group оказалось несколько raw refs для одного provider.
+
+## 12. dedup
+
+```json
+{
+  "duplicate_group_size": 3,
+  "dedup_strategy": "doi",
+  "merged_record_ids": ["art_a", "art_b", "art_c"]
+}
+```
+
+- Exact dedup: `doi`, `arxiv_id`, `canonical_id`.
+- Fuzzy dedup: `normalized title + publication_year + first author surname`.
+- Duplicate groups объединяются через тот же merge-layer, а не просто отбрасываются.
 
 ## Отдельный fulltext-файл
 
-Полный текст хранится отдельно, например в `data/fulltext/art_xxx.json.gz`.
-
-Минимально ожидаемая структура:
+Fulltext хранится отдельно, например в `data/fulltext/art_xxx.json.gz`.
 
 ```json
 {
@@ -201,16 +273,3 @@
   "full_text": "..."
 }
 ```
-
-## Минимально полезный набор полей в основной записи
-
-- `schema_version`
-- `record_id`
-- `resolution_status`
-- `identifiers.canonical_id`
-- `sources.primary_source`
-- `bibliography.title`
-- `labels.gold_label`
-- `content.combined_text`
-- `content.fulltext_status`
-- `provenance.input_position`

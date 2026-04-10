@@ -12,6 +12,7 @@ from .schema import (
     FULLTEXT_STATUS_PARSED,
 )
 from .storage import DatasetStorage, sha256_text
+from .tagger import extract_fulltext_excerpt, infer_tags
 
 
 class PdfPipeline:
@@ -55,6 +56,7 @@ class PdfPipeline:
             content["fulltext_status"] = FULLTEXT_STATUS_PARSED
             content["fulltext_quality"] = payload.get("quality")
             content["fulltext_error"] = None
+            self._refresh_auto_tags(updated, payload.get("full_text"))
         except Exception as exc:  # noqa: BLE001
             content["fulltext_ref"] = None
             content["fulltext_status"] = FULLTEXT_STATUS_FAILED
@@ -119,6 +121,27 @@ class PdfPipeline:
         if not page_text:
             return ""
         return re.sub(r"\s+", " ", page_text).strip()
+
+    def _refresh_auto_tags(self, record: dict[str, Any], full_text: str | None) -> None:
+        labels = dict(record.get("labels") or {})
+        bibliography = dict(record.get("bibliography") or {})
+        content = dict(record.get("content") or {})
+        tagging = infer_tags(
+            title=bibliography.get("title"),
+            abstract=content.get("abstract"),
+            fulltext_excerpt=extract_fulltext_excerpt(full_text),
+        )
+        labels.update(
+            {
+                "auto_topic_tags": tagging.topic_tags,
+                "auto_method_tags": tagging.method_tags,
+                "auto_topic_tag_scores": tagging.topic_scores,
+                "auto_method_tag_scores": tagging.method_scores,
+                "auto_topic_tag_evidence": tagging.topic_evidence,
+                "auto_method_tag_evidence": tagging.method_evidence,
+            }
+        )
+        record["labels"] = labels
 
 
 def _quality_metrics(page_texts: list[str], full_text: str) -> dict[str, Any]:

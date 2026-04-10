@@ -154,6 +154,8 @@ def _flatten_record(record: dict) -> dict:
     auto_method_tags = labels.get("auto_method_tags") or []
     manual_topic_tags = labels.get("manual_topic_tags") or []
     manual_method_tags = labels.get("manual_method_tags") or []
+    auto_topic_tag_scores = labels.get("auto_topic_tag_scores") or {}
+    auto_method_tag_scores = labels.get("auto_method_tag_scores") or {}
     primary_source = record.get("sources", {}).get("primary_source") or record.get("identifiers", {}).get("source")
     return {
         "schema_version": record.get("schema_version"),
@@ -177,6 +179,8 @@ def _flatten_record(record: dict) -> dict:
         "is_hard_negative": labels.get("is_hard_negative"),
         "auto_topic_tags": "; ".join(auto_topic_tags),
         "auto_method_tags": "; ".join(auto_method_tags),
+        "auto_topic_tag_scores": json.dumps(auto_topic_tag_scores, ensure_ascii=False, sort_keys=True),
+        "auto_method_tag_scores": json.dumps(auto_method_tag_scores, ensure_ascii=False, sort_keys=True),
         "manual_topic_tags": "; ".join(manual_topic_tags),
         "manual_method_tags": "; ".join(manual_method_tags),
         "notes": labels.get("notes"),

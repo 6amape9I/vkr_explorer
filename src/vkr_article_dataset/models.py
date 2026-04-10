@@ -47,9 +47,24 @@ class ResolutionResult:
     attempted: list[str] = field(default_factory=list)
     successful: list[str] = field(default_factory=list)
     errors: dict[str, str] = field(default_factory=dict)
+    rejections: dict[str, str] = field(default_factory=dict)
+
+
+@dataclass(slots=True)
+class FieldDecision:
+    winner: str | None
+    candidates: list[str] = field(default_factory=list)
+    reason: str = ""
+
+
+@dataclass(slots=True)
+class MergeDecision:
+    primary_source: str | None
+    fields: dict[str, FieldDecision] = field(default_factory=dict)
 
 
 @dataclass(slots=True)
 class BuildArtifacts:
     record: dict[str, Any]
     candidates: list[ProviderResult] = field(default_factory=list)
+    merge_decisions: dict[str, Any] = field(default_factory=dict)
