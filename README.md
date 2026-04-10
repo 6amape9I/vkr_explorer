@@ -133,6 +133,14 @@ python -m vkr_article_dataset.cli build `
   --csv data\normalized\articles.csv
 ```
 
+После сборки `articles.jsonl` теперь пишется по schema v2:
+
+- с `schema_version = "2"`;
+- с блоком `sources`;
+- с `source_candidates`;
+- с placeholder-полями `content.fulltext_*`;
+- со ссылками на raw payload в `raw.source_payload_refs`.
+
 ### Вариант без активации `.venv`
 
 ```powershell
@@ -152,6 +160,26 @@ python -m vkr_article_dataset.cli build `
   "csv": "data\\normalized\\articles.csv"
 }
 ```
+
+## Обогащение полным текстом PDF
+
+После `build` можно запустить отдельный шаг fulltext enrichment.
+
+```powershell
+python -m vkr_article_dataset.cli enrich-fulltext `
+  --input data\normalized\articles.jsonl `
+  --output data\normalized\articles_with_fulltext.jsonl
+```
+
+Что делает команда:
+
+- скачивает PDF по `links.pdf_url`;
+- сохраняет PDF отдельно в `data\pdfs\`;
+- извлекает текст через `PyMuPDF` с fallback на `pypdf`;
+- сохраняет полный текст отдельно в `data\fulltext\*.json.gz`;
+- обновляет в основном JSONL только `content.fulltext_ref`, `content.fulltext_status`, `content.fulltext_quality`.
+
+Полный текст **не** инлайнится в основной `articles.jsonl`.
 
 ## Что лежит в выходе
 

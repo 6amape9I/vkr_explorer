@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import Iterable
 
-from .models import ArticleSeed
+from .models import ArticleSeed, ProviderResult
 from .utils import parse_bool
 
 
@@ -82,6 +82,58 @@ def write_jsonl(path: str | Path, records: Iterable[dict]) -> None:
             fh.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
+def load_records(path: str | Path) -> list[dict]:
+    path = Path(path)
+    if not path.exists():
+        raise FileNotFoundError(path)
+    records: list[dict] = []
+    with path.open("r", encoding="utf-8") as fh:
+        for line_number, line in enumerate(fh, start=1):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                payload = json.loads(line)
+            except json.JSONDecodeError as exc:
+                raise ValueError(f"Invalid JSON in {path} at line {line_number}: {exc.msg}") from exc
+            if not isinstance(payload, dict):
+                raise ValueError(f"Invalid record in {path} at line {line_number}: expected JSON object")
+            records.append(payload)
+    return records
+
+
+def write_source_payload_refs(
+    output_dataset_path: str | Path,
+    record_id: str,
+    candidates: Iterable[ProviderResult],
+) -> dict[str, str]:
+    output_dataset_path = Path(output_dataset_path)
+    data_root = infer_data_root(output_dataset_path)
+    refs: dict[str, str] = {}
+    for candidate in candidates:
+        provider_dir = data_root / "raw" / candidate.provider_name
+        provider_dir.mkdir(parents=True, exist_ok=True)
+        payload_path = provider_dir / f"{record_id}.json"
+        payload = {
+            "provider_name": candidate.provider_name,
+            "source_id": candidate.source_id,
+            "confidence": candidate.confidence,
+            "match_details": candidate.match_details,
+            "payload": candidate.raw,
+        }
+        with payload_path.open("w", encoding="utf-8") as fh:
+            json.dump(payload, fh, ensure_ascii=False, indent=2)
+        refs[candidate.provider_name] = payload_path.relative_to(data_root).as_posix()
+    return refs
+
+
+def infer_data_root(dataset_path: str | Path) -> Path:
+    dataset_path = Path(dataset_path)
+    if dataset_path.parent.name == "normalized" and dataset_path.parent.parent.name:
+        return dataset_path.parent.parent
+    return dataset_path.parent
+
+
 def write_csv(path: str | Path, records: Iterable[dict]) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -97,30 +149,43 @@ def write_csv(path: str | Path, records: Iterable[dict]) -> None:
 
 def _flatten_record(record: dict) -> dict:
     authors = record.get("bibliography", {}).get("authors") or []
-    topic_tags = record.get("labels", {}).get("topic_tags") or []
-    method_tags = record.get("labels", {}).get("method_tags") or []
+    labels = record.get("labels", {}) or {}
+    auto_topic_tags = labels.get("auto_topic_tags") or []
+    auto_method_tags = labels.get("auto_method_tags") or []
+    manual_topic_tags = labels.get("manual_topic_tags") or []
+    manual_method_tags = labels.get("manual_method_tags") or []
+    primary_source = record.get("sources", {}).get("primary_source") or record.get("identifiers", {}).get("source")
     return {
+        "schema_version": record.get("schema_version"),
         "record_id": record.get("record_id"),
         "resolution_status": record.get("resolution_status"),
-        "source": record.get("identifiers", {}).get("source"),
+        "source": primary_source,
+        "primary_source": primary_source,
+        "available_sources": "; ".join(record.get("sources", {}).get("available_sources") or []),
+        "source_candidates_count": record.get("sources", {}).get("source_candidates_count"),
         "doi": record.get("identifiers", {}).get("doi"),
         "arxiv_id": record.get("identifiers", {}).get("arxiv_id"),
         "openalex_id": record.get("identifiers", {}).get("openalex_id"),
+        "canonical_id": record.get("identifiers", {}).get("canonical_id"),
         "title": record.get("bibliography", {}).get("title"),
         "publication_year": record.get("bibliography", {}).get("publication_year"),
         "publication_date": record.get("bibliography", {}).get("publication_date"),
         "venue": record.get("bibliography", {}).get("venue"),
         "document_type": record.get("bibliography", {}).get("document_type"),
         "authors": "; ".join(authors),
-        "gold_label": record.get("labels", {}).get("gold_label"),
-        "is_hard_negative": record.get("labels", {}).get("is_hard_negative"),
-        "topic_tags": "; ".join(topic_tags),
-        "method_tags": "; ".join(method_tags),
-        "notes": record.get("labels", {}).get("notes"),
+        "gold_label": labels.get("gold_label"),
+        "is_hard_negative": labels.get("is_hard_negative"),
+        "auto_topic_tags": "; ".join(auto_topic_tags),
+        "auto_method_tags": "; ".join(auto_method_tags),
+        "manual_topic_tags": "; ".join(manual_topic_tags),
+        "manual_method_tags": "; ".join(manual_method_tags),
+        "notes": labels.get("notes"),
         "landing_page_url": record.get("links", {}).get("landing_page_url"),
         "pdf_url": record.get("links", {}).get("pdf_url"),
         "has_abstract": record.get("quality", {}).get("has_abstract"),
         "citation_count": record.get("quality", {}).get("citation_count"),
+        "fulltext_status": record.get("content", {}).get("fulltext_status"),
+        "fulltext_ref": record.get("content", {}).get("fulltext_ref"),
         "abstract": record.get("content", {}).get("abstract"),
     }
 

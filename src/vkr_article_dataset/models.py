@@ -38,3 +38,18 @@ class ProviderResult:
     confidence: float
     payload: dict[str, Any]
     raw: dict[str, Any]
+    match_details: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(slots=True)
+class ResolutionResult:
+    candidates: list[ProviderResult] = field(default_factory=list)
+    attempted: list[str] = field(default_factory=list)
+    successful: list[str] = field(default_factory=list)
+    errors: dict[str, str] = field(default_factory=dict)
+
+
+@dataclass(slots=True)
+class BuildArtifacts:
+    record: dict[str, Any]
+    candidates: list[ProviderResult] = field(default_factory=list)

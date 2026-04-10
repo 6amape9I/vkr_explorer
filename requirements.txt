@@ -1,2 +1,4 @@
 requests>=2.32.0
 streamlit>=1.44.0
+PyMuPDF>=1.26.0
+pypdf>=5.4.0

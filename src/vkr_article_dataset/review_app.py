@@ -142,8 +142,11 @@ def _render_record(record: dict, *, current_index: int, total: int, filtered_ids
     combined_text = _combined_text(record)
     abstract = (record.get("content") or {}).get("abstract")
     notes = (record.get("labels") or {}).get("notes")
-    topic_tags = (record.get("labels") or {}).get("topic_tags") or []
-    method_tags = (record.get("labels") or {}).get("method_tags") or []
+    labels = record.get("labels") or {}
+    auto_topic_tags = labels.get("auto_topic_tags") or labels.get("topic_tags") or []
+    auto_method_tags = labels.get("auto_method_tags") or labels.get("method_tags") or []
+    manual_topic_tags = labels.get("manual_topic_tags") or []
+    manual_method_tags = labels.get("manual_method_tags") or []
 
     nav_left, nav_center, nav_right = st.columns([1, 1, 1])
     with nav_left:
@@ -183,11 +186,12 @@ def _render_record(record: dict, *, current_index: int, total: int, filtered_ids
     meta1, meta2, meta3, meta4 = st.columns(4)
     bibliography = record.get("bibliography") or {}
     identifiers = record.get("identifiers") or {}
+    sources = record.get("sources") or {}
     links = record.get("links") or {}
     quality = record.get("quality") or {}
 
     meta1.metric("Year", bibliography.get("publication_year") or "N/A")
-    meta2.metric("Source", identifiers.get("source") or "N/A")
+    meta2.metric("Source", sources.get("primary_source") or identifiers.get("source") or "N/A")
     meta3.metric("Abstract", "Yes" if quality.get("has_abstract") else "No")
     meta4.metric("PDF", "Yes" if quality.get("has_pdf_url") else "No")
 
@@ -223,11 +227,19 @@ def _render_record(record: dict, *, current_index: int, total: int, filtered_ids
 
     tag_left, tag_right = st.columns(2)
     with tag_left:
-        st.markdown("**Topic tags**")
-        st.write(", ".join(topic_tags) if topic_tags else "N/A")
+        st.markdown("**Auto topic tags**")
+        st.write(", ".join(auto_topic_tags) if auto_topic_tags else "N/A")
     with tag_right:
-        st.markdown("**Method tags**")
-        st.write(", ".join(method_tags) if method_tags else "N/A")
+        st.markdown("**Auto method tags**")
+        st.write(", ".join(auto_method_tags) if auto_method_tags else "N/A")
+
+    manual_left, manual_right = st.columns(2)
+    with manual_left:
+        st.markdown("**Manual topic tags**")
+        st.write(", ".join(manual_topic_tags) if manual_topic_tags else "N/A")
+    with manual_right:
+        st.markdown("**Manual method tags**")
+        st.write(", ".join(manual_method_tags) if manual_method_tags else "N/A")
 
     with st.expander("Record metadata"):
         provenance = record.get("provenance") or {}

@@ -1,36 +1,85 @@
 {
+  "schema_version": "2",
   "record_id": "art_6abf9d33f0f8",
   "resolution_status": "resolved",
   "retrieved_at": "2026-04-10T12:00:00Z",
   "identifiers": {
-    "doi": null,
+    "doi": "10.1000/example",
     "arxiv_id": "2206.11641",
-    "openalex_id": null,
-    "source": "arxiv"
+    "openalex_id": "https://openalex.org/W1234567890",
+    "canonical_id": "doi:10.1000/example",
+    "source": "openalex"
   },
+  "sources": {
+    "primary_source": "openalex",
+    "available_sources": [
+      "openalex",
+      "arxiv"
+    ],
+    "source_candidates_count": 2
+  },
+  "source_candidates": [
+    {
+      "provider_name": "openalex",
+      "source_id": "https://openalex.org/W1234567890",
+      "confidence": 0.99,
+      "match_details": {
+        "matched_by": "doi"
+      },
+      "identifiers": {
+        "doi": "10.1000/example",
+        "arxiv_id": "2206.11641",
+        "openalex_id": "https://openalex.org/W1234567890"
+      },
+      "has_abstract": true,
+      "has_pdf_url": false
+    },
+    {
+      "provider_name": "arxiv",
+      "source_id": "2206.11641",
+      "confidence": 0.99,
+      "match_details": {
+        "matched_by": "arxiv_id"
+      },
+      "identifiers": {
+        "doi": null,
+        "arxiv_id": "2206.11641",
+        "openalex_id": null
+      },
+      "has_abstract": true,
+      "has_pdf_url": true
+    }
+  ],
   "bibliography": {
     "title": "Advancing Blockchain-based Federated Learning through Verifiable Off-chain Computations",
     "authors": [
       "Jonathan Heiss",
-      "Elias Grunewald",
-      "Nikolas Haimerl",
-      "Stefan Schulte",
-      "Stefan Tai"
+      "Elias Grunewald"
     ],
     "publication_year": 2022,
     "publication_date": "2022-06-23",
-    "venue": "arXiv",
-    "document_type": "preprint"
+    "venue": "OpenAlex Venue",
+    "document_type": "article"
   },
   "content": {
     "abstract": "Federated learning may be subject to both global aggregation attacks and distributed poisoning attacks...",
     "combined_text": "Advancing Blockchain-based Federated Learning through Verifiable Off-chain Computations\n\nFederated learning may be subject to both global aggregation attacks and distributed poisoning attacks...",
-    "language": "en"
+    "language": "en",
+    "fulltext_ref": "fulltext/art_6abf9d33f0f8.json.gz",
+    "fulltext_status": "parsed",
+    "fulltext_quality": {
+      "char_count": 54231,
+      "word_count": 8012,
+      "page_count": 12,
+      "empty_pages": 0,
+      "suspected_ocr_noise": false
+    },
+    "fulltext_error": null
   },
   "labels": {
     "gold_label": "relevant",
     "is_hard_negative": false,
-    "topic_tags": [
+    "auto_topic_tags": [
       "federated_learning",
       "blockchain",
       "off_chain",
@@ -38,29 +87,43 @@
       "zk_proof",
       "security_privacy"
     ],
-    "method_tags": [
+    "auto_method_tags": [
       "verification"
     ],
+    "manual_topic_tags": [],
+    "manual_method_tags": [],
     "notes": "Ключевая статья по связке FL + blockchain + verifiable off-chain compute"
   },
   "quality": {
     "has_abstract": true,
     "has_pdf_url": true,
     "is_open_access": true,
-    "citation_count": null
+    "citation_count": 21
   },
   "links": {
-    "landing_page_url": "https://arxiv.org/abs/2206.11641",
+    "landing_page_url": "https://doi.org/10.1000/example",
     "pdf_url": "https://arxiv.org/pdf/2206.11641.pdf"
   },
   "provenance": {
     "seed_query": "blockchain federated learning off-chain",
     "input_position": 1,
-    "resolver": "arxiv",
-    "resolver_confidence": 0.99
+    "resolver_summary": {
+      "attempted": [
+        "arxiv",
+        "openalex"
+      ],
+      "successful": [
+        "arxiv",
+        "openalex"
+      ],
+      "errors": {}
+    }
   },
   "raw": {
-    "provider": "arxiv",
-    "note": "Example record"
+    "seed_extra": {},
+    "source_payload_refs": {
+      "arxiv": "raw/arxiv/art_6abf9d33f0f8.json",
+      "openalex": "raw/openalex/art_6abf9d33f0f8.json"
+    }
   }
 }

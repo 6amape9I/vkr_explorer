@@ -35,6 +35,11 @@ class HttpClient:
         response.raise_for_status()
         return response.text
 
+    def get_bytes(self, url: str, params: dict[str, Any] | None = None) -> bytes:
+        response = self.session.get(url, params=params, timeout=self.settings.timeout_seconds)
+        response.raise_for_status()
+        return response.content
+
     def _respect_arxiv_delay(self) -> None:
         delay = max(0.0, self.settings.arxiv_delay_seconds)
         if delay <= 0:
