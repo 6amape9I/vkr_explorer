@@ -1,0 +1,4 @@
+blockchain federated learning
+decentralized federated learning
+federated learning off-chain verification
+federated learning smart contracts

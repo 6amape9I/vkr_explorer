@@ -1,0 +1,23 @@
+{
+  "run_id": "run_001",
+  "mode": "discover_and_label",
+  "started_at": "2026-04-10T14:44:33Z",
+  "finished_at": "2026-04-10T14:44:34Z",
+  "queries_count": 4,
+  "source": "openalex",
+  "max_results_per_query": 200,
+  "raw_candidates": 0,
+  "deduplicated_candidates": 0,
+  "duplicates_removed": 0,
+  "predicted_relevant": 0,
+  "predicted_irrelevant": 0,
+  "missing_abstracts": 0,
+  "api_errors": 4,
+  "parse_failures": 0,
+  "threshold": 0.65,
+  "model_name": "logreg",
+  "model_version": "baseline_run_01",
+  "model_path": "artifacts\\baseline_run_01\\logreg\\model.joblib",
+  "vectorizer_path": "artifacts\\baseline_run_01\\logreg\\vectorizer.joblib",
+  "input_queries_path": "data\\discovery\\queries.txt"
+}

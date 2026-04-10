@@ -1,0 +1,5 @@
+error | query="blockchain federated learning" | source=openalex | type=HTTPError | message="429 Client Error: Too Many Requests for url: https://api.openalex.org/works?per-page=200&page=1&search=blockchain+federated+learning"
+error | query="decentralized federated learning" | source=openalex | type=HTTPError | message="429 Client Error: Too Many Requests for url: https://api.openalex.org/works?per-page=200&page=1&search=decentralized+federated+learning"
+error | query="federated learning off-chain verification" | source=openalex | type=HTTPError | message="429 Client Error: Too Many Requests for url: https://api.openalex.org/works?per-page=200&page=1&search=federated+learning+off-chain+verification"
+error | query="federated learning smart contracts" | source=openalex | type=HTTPError | message="429 Client Error: Too Many Requests for url: https://api.openalex.org/works?per-page=200&page=1&search=federated+learning+smart+contracts"
+run_summary | run_id=run_001 | queries=4 | raw_candidates=0 | deduplicated_candidates=0 | predicted_relevant=0 | predicted_irrelevant=0 | missing_abstracts=0 | api_errors=4 | parse_failures=0
