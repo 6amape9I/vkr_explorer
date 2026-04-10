@@ -89,7 +89,7 @@ class OpenAlexSearchSource(SearchSource):
 
         while len(candidates) < query.max_results:
             params = self._build_params(query=query, per_page=per_page, page_number=page_number)
-            payload = self.http_client.get_json(OPENALEX_SEARCH_URL, params=params)
+            payload = self.http_client.get_json(OPENALEX_SEARCH_URL, params=params, openalex=True)
             results = payload.get("results") or []
             pages.append(
                 SearchPage(

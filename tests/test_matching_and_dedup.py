@@ -10,7 +10,8 @@ class FakeHttpClient:
     def __init__(self, payload: dict) -> None:
         self.payload = payload
 
-    def get_json(self, url: str, params=None) -> dict:
+    def get_json(self, url: str, params=None, **kwargs) -> dict:
+        del url, params, kwargs
         return deepcopy(self.payload)
 
 

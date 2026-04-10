@@ -79,11 +79,15 @@ python -m pip install -e .
 ```powershell
 $env:CONTACT_EMAIL = "you@example.com"
 $env:OPENALEX_API_KEY = ""
+$env:OPENALEX_DELAY_SECONDS = "1.0"
+$env:OPENALEX_MAX_RETRIES = "3"
+$env:OPENALEX_RETRY_BACKOFF_SECONDS = "5.0"
 $env:ARXIV_DELAY_SECONDS = "3.0"
 $env:HTTP_TIMEOUT_SECONDS = "30.0"
 ```
 
 `CONTACT_EMAIL` полезно передавать в OpenAlex как контактный адрес. Если `OPENALEX_API_KEY` не задан, используется публичный доступ.
+Для discovery-поиска `OPENALEX_DELAY_SECONDS`, `OPENALEX_MAX_RETRIES` и `OPENALEX_RETRY_BACKOFF_SECONDS` ограничивают частоту запросов и дают automatic retry при `429 Too Many Requests`.
 
 ## Формат входного файла
 

@@ -27,7 +27,8 @@ class FakeHttpClient:
         self.responses = responses or []
         self.calls: list[tuple[str, dict]] = []
 
-    def get_json(self, url: str, params=None):
+    def get_json(self, url: str, params=None, **kwargs):
+        del kwargs
         self.calls.append((url, dict(params or {})))
         if not self.responses:
             return {"results": []}

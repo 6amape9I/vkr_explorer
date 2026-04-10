@@ -34,7 +34,7 @@ class OpenAlexProvider:
     def _resolve_by_doi(self, doi: str) -> ProviderResult | None:
         params = self._base_params()
         params["filter"] = f"doi:{doi.lower()}"
-        data = self.http_client.get_json(OPENALEX_WORKS_URL, params=params)
+        data = self.http_client.get_json(OPENALEX_WORKS_URL, params=params, openalex=True)
         results = data.get("results") or []
         if not results:
             self.last_resolution_note = f"no OpenAlex work found for DOI {doi.lower()}"
@@ -53,7 +53,7 @@ class OpenAlexProvider:
         params = self._base_params()
         params["search"] = seed.title
         params["per-page"] = 10
-        data = self.http_client.get_json(OPENALEX_WORKS_URL, params=params)
+        data = self.http_client.get_json(OPENALEX_WORKS_URL, params=params, openalex=True)
         results = data.get("results") or []
         if not results:
             self.last_resolution_note = f"no OpenAlex search results for title {seed.title!r}"
