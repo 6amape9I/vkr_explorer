@@ -1,0 +1,40 @@
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Any
+
+
+ALLOWED_GOLD_LABELS = {"relevant", "partial", "irrelevant", "unknown"}
+
+
+@dataclass(slots=True)
+class ArticleSeed:
+    input_position: int
+    title: str | None = None
+    doi: str | None = None
+    arxiv_id: str | None = None
+    url: str | None = None
+    seed_query: str | None = None
+    gold_label: str = "unknown"
+    is_hard_negative: bool = False
+    notes: str | None = None
+    extra: dict[str, Any] = field(default_factory=dict)
+
+    def validate(self) -> None:
+        if self.gold_label not in ALLOWED_GOLD_LABELS:
+            raise ValueError(
+                f"Unsupported gold_label={self.gold_label!r}. Allowed: {sorted(ALLOWED_GOLD_LABELS)}"
+            )
+        if not any([self.title, self.doi, self.arxiv_id, self.url]):
+            raise ValueError(
+                "Each seed must have at least one of: title, doi, arxiv_id, url"
+            )
+
+
+@dataclass(slots=True)
+class ProviderResult:
+    provider_name: str
+    source_id: str | None
+    confidence: float
+    payload: dict[str, Any]
+    raw: dict[str, Any]

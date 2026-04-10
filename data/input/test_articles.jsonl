@@ -1,0 +1,5 @@
+{"arxiv_id": "2206.11641", "gold_label": "relevant", "seed_query": "blockchain federated learning off-chain computation", "notes": "Ключевая статья по verifiable off-chain computations"}
+{"title": "A Survey on Decentralized Federated Learning", "gold_label": "relevant", "seed_query": "decentralized federated learning blockchain survey", "notes": "Обзор по DFL, включает blockchain-based FL"}
+{"title": "Blockchain-empowered Federated Learning: Benefits, Challenges, and Solutions", "gold_label": "relevant", "seed_query": "blockchain empowered federated learning survey", "notes": "Обзор по BC-FL"}
+{"title": "Communication-Efficient Learning of Deep Networks from Decentralized Data", "gold_label": "partial", "seed_query": "federated learning foundational paper", "notes": "Базовая статья по FL, но без blockchain/off-chain слоя"}
+{"title": "Parameter Box: High Performance Parameter Servers for Efficient Distributed Deep Neural Network Training", "gold_label": "irrelevant", "is_hard_negative": true, "seed_query": "distributed deep learning parameter server", "notes": "Трудный негатив: близко по distributed training, но не FL/BC-FL"}
